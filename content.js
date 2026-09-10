@@ -43,6 +43,12 @@ function refreshStatusBar() {
 }
 
 function updateModifierState(event) {
+  // Ignore synthetic events we dispatch ourselves (e.g. the translated
+  // ArrowLeft/etc. below) — they don't carry real modifier state and would
+  // otherwise flash the status bar back to "Insert".
+  if (!event.isTrusted) {
+    return;
+  }
   if (typeof event.getModifierState === "function") {
     capsLockOn = event.getModifierState("CapsLock");
     shiftHeld = event.getModifierState("Shift");
@@ -65,19 +71,24 @@ function currentDirection() {
   return label.startsWith("Down") ? "Down" : "Across";
 }
 
-function goToClue(number) {
-  const direction = currentDirection();
-
+function findClueLi(direction, number) {
   const wrapper = Array.from(
     document.querySelectorAll(".xwd__clue-list--wrapper")
   ).find((w) => w.querySelector("h3")?.textContent === direction);
   if (!wrapper) {
-    return;
+    return null;
   }
 
-  const li = Array.from(wrapper.querySelectorAll("li.xwd__clue--li")).find(
+  return Array.from(wrapper.querySelectorAll("li.xwd__clue--li")).find(
     (li) => li.querySelector(".xwd__clue--label")?.textContent === number
   );
+}
+
+function goToClue(number) {
+  const direction = currentDirection();
+  const otherDirection = direction === "Across" ? "Down" : "Across";
+
+  const li = findClueLi(direction, number) || findClueLi(otherDirection, number);
   if (!li) {
     return;
   }
