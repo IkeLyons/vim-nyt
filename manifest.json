@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Vim NYT",
+  "description": "Vim-like keybindings for NYT Crosswords.",
+  "version": "0.1",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.nytimes.com/crosswords/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
