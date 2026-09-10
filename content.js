@@ -1,5 +1,3 @@
-console.log("[vim-nyt] content script loaded");
-
 const KEY_MAP = {
   H: "ArrowLeft",
   J: "ArrowDown",
@@ -22,7 +20,6 @@ function goToClue(number) {
     document.querySelectorAll(".xwd__clue-list--wrapper")
   ).find((w) => w.querySelector("h3")?.textContent === direction);
   if (!wrapper) {
-    console.log(`[vim-nyt] couldn't find ${direction} clue list`);
     return;
   }
 
@@ -30,7 +27,6 @@ function goToClue(number) {
     (li) => li.querySelector(".xwd__clue--label")?.textContent === number
   );
   if (!li) {
-    console.log(`[vim-nyt] no ${direction} clue numbered ${number}`);
     return;
   }
 
@@ -45,8 +41,6 @@ function goToClue(number) {
   ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach(
     (type) => li.dispatchEvent(new MouseEvent(type, opts))
   );
-
-  console.log(`[vim-nyt] jumped to ${direction} ${number}`);
 }
 
 document.addEventListener(
@@ -58,7 +52,6 @@ document.addEventListener(
         event.preventDefault();
         event.stopPropagation();
         gotoBuffer += event.key;
-        console.log(`[vim-nyt] goto buffer: ${gotoBuffer}`);
         return;
       }
 
@@ -75,7 +68,6 @@ document.addEventListener(
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
-        console.log("[vim-nyt] goto cancelled");
         gotoBuffer = null;
         return;
       }
@@ -88,7 +80,6 @@ document.addEventListener(
       event.preventDefault();
       event.stopPropagation();
       gotoBuffer = "";
-      console.log("[vim-nyt] goto started, type a clue number then Enter");
       return;
     }
 
@@ -99,8 +90,6 @@ document.addEventListener(
 
     event.preventDefault();
     event.stopPropagation();
-
-    console.log(`[vim-nyt] translating "${event.key}" -> "${mapped}"`);
 
     event.target.dispatchEvent(
       new KeyboardEvent("keydown", {
