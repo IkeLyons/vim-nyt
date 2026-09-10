@@ -5,7 +5,59 @@ const KEY_MAP = {
   L: "ArrowRight",
 };
 
+const COLOR_INSERT = "#6b7280"; // grey
+const COLOR_NAVIGATE = "#2563eb"; // blue
+const COLOR_GOTO = "#7c3aed"; // purple
+
+const statusBar = document.createElement("div");
+statusBar.textContent = "Insert";
+Object.assign(statusBar.style, {
+  position: "fixed",
+  bottom: "16px",
+  right: "16px",
+  zIndex: "2147483647",
+  padding: "3px 8px",
+  fontFamily: "monospace",
+  fontWeight: "600",
+  fontSize: "12px",
+  color: "#fff",
+  background: COLOR_INSERT,
+  userSelect: "none",
+  pointerEvents: "none",
+});
+document.documentElement.appendChild(statusBar);
+
+let capsLockOn = false;
+let shiftHeld = false;
 let gotoBuffer = null; // null = inactive, otherwise the digits typed so far
+
+function refreshStatusBar() {
+  if (gotoBuffer !== null) {
+    statusBar.textContent = `G${gotoBuffer}`;
+    statusBar.style.background = COLOR_GOTO;
+    return;
+  }
+  const navigating = capsLockOn || shiftHeld;
+  statusBar.textContent = navigating ? "Navigate" : "Insert";
+  statusBar.style.background = navigating ? COLOR_NAVIGATE : COLOR_INSERT;
+}
+
+function updateModifierState(event) {
+  if (typeof event.getModifierState === "function") {
+    capsLockOn = event.getModifierState("CapsLock");
+    shiftHeld = event.getModifierState("Shift");
+  }
+  refreshStatusBar();
+}
+
+document.addEventListener("keydown", updateModifierState, true);
+document.addEventListener("keyup", updateModifierState, true);
+// Defensive reset: if focus leaves the window while Shift is held (e.g.
+// alt-tab), there's no keyup to tell us it was released.
+window.addEventListener("blur", () => {
+  shiftHeld = false;
+  refreshStatusBar();
+});
 
 function currentDirection() {
   const selected = document.querySelector("rect.xwd__cell--selected");
@@ -52,6 +104,7 @@ document.addEventListener(
         event.preventDefault();
         event.stopPropagation();
         gotoBuffer += event.key;
+        refreshStatusBar();
         return;
       }
 
@@ -62,6 +115,7 @@ document.addEventListener(
           goToClue(gotoBuffer);
         }
         gotoBuffer = null;
+        refreshStatusBar();
         return;
       }
 
@@ -69,17 +123,20 @@ document.addEventListener(
         event.preventDefault();
         event.stopPropagation();
         gotoBuffer = null;
+        refreshStatusBar();
         return;
       }
 
       // Any other key cancels the buffer and falls through normally.
       gotoBuffer = null;
+      refreshStatusBar();
     }
 
     if (event.key === "G") {
       event.preventDefault();
       event.stopPropagation();
       gotoBuffer = "";
+      refreshStatusBar();
       return;
     }
 
